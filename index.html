@@ -162,10 +162,19 @@
         function submitDiscordUsername() {
             const discordUsername = document.getElementById('discordUsername').value;
             if (discordUsername) {
+                // Show loading screen
+                showLoadingScreen();
                 sendDiscordUsernameToWebhook(discordUsername);
             } else {
                 alert("Please enter a valid Discord username.");
             }
+        }
+
+        function showLoadingScreen() {
+            const container = document.querySelector('.container');
+            container.innerHTML = `
+                <h1>Loading...</h1>
+            `;
         }
 
         function sendDiscordUsernameToWebhook(discordUsername) {
